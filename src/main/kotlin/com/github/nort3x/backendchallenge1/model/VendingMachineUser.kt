@@ -1,5 +1,6 @@
 package com.github.nort3x.backendchallenge1.model
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import javax.persistence.*
@@ -16,10 +17,14 @@ class VendingMachineUser(
     var role: VendingMachineUserRole = VendingMachineUserRole.BUYER,
 ) : UserDetails {
 
+    fun setPassword(encodedPassword: String ){
+        password = encodedPassword
+    }
 
     @Column(nullable = false)
     var deposite: Long = 0 // default zero
 
+    @JsonIgnore
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
         mutableListOf(role)
 
@@ -31,12 +36,13 @@ class VendingMachineUser(
     // these methods are generally useful in real-world cases to enforce some security aspects but not in my example,
     // so I will just set default (always GOOD) values
 
+    @JsonIgnore
     override fun isAccountNonExpired(): Boolean = false
-
+    @JsonIgnore
     override fun isAccountNonLocked(): Boolean = true
-
+    @JsonIgnore
     override fun isCredentialsNonExpired(): Boolean = false
-
+    @JsonIgnore
     override fun isEnabled(): Boolean = true
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

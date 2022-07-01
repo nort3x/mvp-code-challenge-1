@@ -10,19 +10,13 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import java.time.Instant
 
-private class Instant2EpochSerializer : JsonSerializer<Instant>() {
-    override fun serialize(value: Instant?, gen: JsonGenerator, serializers: SerializerProvider) {
-        if (value == null)
-            gen.writeNull()
-        else
-            gen.writeNumber(value.toEpochMilli())
-    }
-
-
-}
-
 @Configuration
 class ObjectMapperConfig {
+
+    /**
+     *  customized jackson ObjectMapper instance to better serialize Instant
+     *  by default it's a string representation, but epoch is much more general
+     */
     @Bean
     @Primary
     fun objectMapper(): ObjectMapper =
@@ -34,4 +28,14 @@ class ObjectMapperConfig {
             javaTimeModule.addSerializer(Instant::class.java, Instant2EpochSerializer())
             registerModule(javaTimeModule)
         }
+}
+private class Instant2EpochSerializer : JsonSerializer<Instant>() {
+    override fun serialize(value: Instant?, gen: JsonGenerator, serializers: SerializerProvider) {
+        if (value == null)
+            gen.writeNull()
+        else
+            gen.writeNumber(value.toEpochMilli())
+    }
+
+
 }
