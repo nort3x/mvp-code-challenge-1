@@ -1,9 +1,9 @@
 package com.github.nort3x.backendchallenge1.service
 
-import com.github.nort3x.backendchallenge1.dto.UserRegisterDto
-import com.github.nort3x.backendchallenge1.dto.UserUpdateDto
 import com.github.nort3x.backendchallenge1.exceptions.AlreadyExist
 import com.github.nort3x.backendchallenge1.exceptions.NotFound
+import com.github.nort3x.backendchallenge1.model.UserRegisterDto
+import com.github.nort3x.backendchallenge1.model.UserUpdateDto
 import com.github.nort3x.backendchallenge1.model.VendingMachineUser
 import com.github.nort3x.backendchallenge1.repository.VendingMachineUserRepo
 import org.springframework.security.crypto.password.PasswordEncoder

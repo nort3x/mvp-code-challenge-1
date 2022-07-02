@@ -37,11 +37,11 @@ class VendingMachineUser(
     // so I will just set default (always GOOD) values
 
     @JsonIgnore
-    override fun isAccountNonExpired(): Boolean = false
+    override fun isAccountNonExpired(): Boolean = true
     @JsonIgnore
     override fun isAccountNonLocked(): Boolean = true
     @JsonIgnore
-    override fun isCredentialsNonExpired(): Boolean = false
+    override fun isCredentialsNonExpired(): Boolean = true
     @JsonIgnore
     override fun isEnabled(): Boolean = true
     override fun equals(other: Any?): Boolean {
@@ -61,3 +61,6 @@ class VendingMachineUser(
 
 
 }
+
+data class UserRegisterDto(val username: String, val password: String, val role: VendingMachineUserRole)
+data class UserUpdateDto(val password: String?, val role: VendingMachineUserRole?)
