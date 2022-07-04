@@ -63,8 +63,7 @@ class VendingMachineSecurityConfig {
                 authorize(PUBLIC_PATHS, permitAll)
                 authorize(AUTHENTICATED_PATHS, authenticated)
             }
-            formLogin {
-            }
+           httpBasic {  }
             csrf {
                 disable()
             }

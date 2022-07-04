@@ -1,12 +1,11 @@
 package com.github.nort3x.backendchallenge1.model
 
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.IdClass
-import javax.persistence.ManyToOne
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.github.nort3x.backendchallenge1.validation.MultipleOf
+import javax.persistence.*
 
-class ProductSellerPK(
-    var sellerId: String? = null,
+data class ProductSellerPK(
+    var seller: String? = null,
     var productName: String? = null
 ) : java.io.Serializable
 
@@ -16,10 +15,21 @@ class ProductSellerPK(
 class Product(
     @ManyToOne
     @Id
-    var sellerId: VendingMachineUser,
+    @JsonIgnore
+    @JoinColumn(name = "sellerId")
+    var seller: VendingMachineUser,
     @Id
-    var productName: String
+    var productName: String,
+
+    @MultipleOf(5)
+    var cost: Int = 0,
+
+    var amountAvailable: Int = 0
 ) {
+
+    fun getSellerId(): String =
+        seller.username
+
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -27,15 +37,20 @@ class Product(
 
         other as Product
 
-        if (sellerId != other.sellerId) return false
+        if (seller != other.seller) return false
         if (productName != other.productName) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = sellerId.hashCode()
+        var result = seller.hashCode()
         result = 31 * result + productName.hashCode()
         return result
     }
+
+    fun pk(): ProductSellerPK = ProductSellerPK(seller.username, productName)
 }
+
+data class ProductRegisterDto(val productName: String, val cost: Int? = null, val amountAvailable: Int? = null)
+data class ProductUpdateDto(val cost: Int? = null, val amountAvailable: Int? = null)

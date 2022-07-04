@@ -1,11 +1,15 @@
 package com.github.nort3x.backendchallenge1.model
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.github.nort3x.backendchallenge1.validation.MultipleOf
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.validation.annotation.Validated
 import javax.persistence.*
+import javax.validation.executable.ValidateOnExecution
 
 @Entity
+@ValidateOnExecution
 class VendingMachineUser(
 
     @Id
@@ -22,12 +26,14 @@ class VendingMachineUser(
     }
 
     @Column(nullable = false)
-    var deposite: Long = 0 // default zero
+    @MultipleOf(5)
+    var deposit: Long = 0 // default zero
 
     @JsonIgnore
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
         mutableListOf(role)
 
+    @JsonIgnore
     override fun getPassword(): String = password
 
     override fun getUsername(): String = username

@@ -8,8 +8,11 @@ import org.springframework.stereotype.Service
 @Service
 class SecurityService {
     fun currentUser(): VendingMachineUser? =
-        when(SecurityContextHolder.getContext().authentication.principal){
+        when (SecurityContextHolder.getContext().authentication.principal) {
             is VendingMachineUser -> SecurityContextHolder.getContext().authentication.principal as VendingMachineUser
             else -> null
         }
+
+    fun currentUserSafe(): VendingMachineUser =
+        currentUser()!!
 }

@@ -1,5 +1,6 @@
 package com.github.nort3x.backendchallenge1.utils
 
+import com.github.nort3x.backendchallenge1.configuration.security.Vetoer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -14,14 +15,12 @@ fun <T : Any> T.asResponseEntity(status: HttpStatus = HttpStatus.OK): ResponseEn
     ResponseEntity.status(status).body(this)
 
 
-fun <T> ifCan(condition: Boolean, func: () -> T): T? {
-    return if (condition) {
+/**
+ * auxiliary method responsible for checking [Vetoer] and invoke respective function
+ * @param func callable function after consideration of [Vetoer]
+ */
+fun <T> withConsiderationOf(condition: Vetoer, func: () -> T): T {
+    return if (!condition.isDenied)
         func()
-    } else null
-}
-
-infix fun <T> T?.otherwiseThrow(t: Throwable): T {
-    if (this == null)
-        throw t
-    return this
+    else throw condition.reason
 }
