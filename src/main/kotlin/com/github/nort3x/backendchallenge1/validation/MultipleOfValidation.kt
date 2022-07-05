@@ -22,7 +22,7 @@ annotation class MultipleOf(val value: Int,
                             val payload: Array<KClass<in Payload>> = []
 )
 
-class MultipleOfValidation : ConstraintValidator<MultipleOf, Int> {
+class MultipleOfValidation : ConstraintValidator<MultipleOf, Int?> {
     var modulus by Delegates.notNull<Int>()
     override fun initialize(constraintAnnotation: MultipleOf) {
         super.initialize(constraintAnnotation)
@@ -30,6 +30,6 @@ class MultipleOfValidation : ConstraintValidator<MultipleOf, Int> {
     }
 
     override fun isValid(value: Int?, context: ConstraintValidatorContext): Boolean =
-        if (value == null) false
+        if (value == null) true
         else value % modulus == 0
 }

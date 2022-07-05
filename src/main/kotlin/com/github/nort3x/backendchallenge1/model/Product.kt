@@ -2,7 +2,9 @@ package com.github.nort3x.backendchallenge1.model
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.github.nort3x.backendchallenge1.validation.MultipleOf
+import com.github.nort3x.backendchallenge1.validation.ValidCoin
 import javax.persistence.*
+import javax.validation.constraints.Min
 
 data class ProductSellerPK(
     var seller: String? = null,
@@ -49,8 +51,21 @@ class Product(
         return result
     }
 
+
+
     fun pk(): ProductSellerPK = ProductSellerPK(seller.username, productName)
+    override fun toString(): String {
+        return "Product(seller=${seller}, productName='$productName', cost=$cost, amountAvailable=$amountAvailable)"
+    }
 }
 
-data class ProductRegisterDto(val productName: String, val cost: Int? = null, val amountAvailable: Int? = null)
-data class ProductUpdateDto(val cost: Int? = null, val amountAvailable: Int? = null)
+data class ProductRegisterDto(
+    val productName: String,
+    @field:MultipleOf(5) val cost: Int? = null,
+    @field:Min(0) val amountAvailable: Int? = null
+)
+
+data class ProductUpdateDto(
+    @field:MultipleOf(5) val cost: Int? = null,
+    @field:Min(0) val amountAvailable: Int? = null
+)

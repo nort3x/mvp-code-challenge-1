@@ -4,6 +4,6 @@ import org.springframework.http.HttpStatus
 
 
 open class VendingMachineExceptionBase(msg: String, val statusCode: HttpStatus, cause: Throwable? = null) :
-    Throwable(msg, cause) {
+    Error(msg, cause) {
 
 }

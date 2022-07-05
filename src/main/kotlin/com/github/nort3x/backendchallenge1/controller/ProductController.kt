@@ -10,14 +10,18 @@ import com.github.nort3x.backendchallenge1.model.ProductUpdateDto
 import com.github.nort3x.backendchallenge1.service.ProductService
 import com.github.nort3x.backendchallenge1.utils.asResponseEntity
 import com.github.nort3x.backendchallenge1.utils.withConsiderationOf
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
+import javax.validation.Valid
 import kotlin.streams.asSequence
 
 @RestController
 @RequestMapping("/v1/product", produces = [MediaType.APPLICATION_JSON_VALUE])
+@Validated
 class ProductController(
     val productService: ProductService,
     val securityService: SecurityService,
@@ -26,17 +30,17 @@ class ProductController(
 
     @PostMapping
     @AuthenticatedClient
-    fun registerNewProduct(@RequestBody productRegisterDto: ProductRegisterDto): ResponseEntity<Product> =
+    fun registerNewProduct(@RequestBody @Valid productRegisterDto: ProductRegisterDto): ResponseEntity<Product> =
         withConsiderationOf(ac.userCanRegisterProductBy(user = securityService.currentUserSafe())) {
             productService.registerNewProduct(productRegisterDto, securityService.currentUserSafe())
-                .asResponseEntity()
+                .asResponseEntity(HttpStatus.CREATED)
         }
 
     @PutMapping("/{productName}")
     @AuthenticatedClient
     fun updateProduct(
         @PathVariable productName: String,
-        @RequestBody productUpdateDto: ProductUpdateDto
+        @RequestBody @Valid productUpdateDto: ProductUpdateDto
     ): ResponseEntity<Product> =
         productService.updateProduct(
             ProductSellerPK(securityService.currentUserSafe().username, productName),

@@ -1,6 +1,6 @@
 package com.github.nort3x.backendchallenge1
 
-import com.github.nort3x.backendchallenge1.model.UserRegisterDto
+import com.github.nort3x.backendchallenge1.model.VendingMachineUserRegisterDto
 import com.github.nort3x.backendchallenge1.model.VendingMachineUserRole
 import com.github.nort3x.backendchallenge1.service.UserService
 import org.springframework.boot.CommandLineRunner
@@ -12,8 +12,8 @@ import org.springframework.context.annotation.Bean
 class BackendChallenge1Application{
     @Bean
     fun onStartUp(userService: UserService) = CommandLineRunner {
-        userService.registerNewUser(UserRegisterDto("seller","password",VendingMachineUserRole.SELLER))
-        userService.registerNewUser(UserRegisterDto("buyer","password",VendingMachineUserRole.BUYER))
+        userService.registerNewUser(VendingMachineUserRegisterDto("seller","password",VendingMachineUserRole.SELLER))
+        userService.registerNewUser(VendingMachineUserRegisterDto("buyer","password",VendingMachineUserRole.BUYER))
     }
 }
 

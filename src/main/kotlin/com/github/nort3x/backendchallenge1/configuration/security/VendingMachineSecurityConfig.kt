@@ -6,7 +6,10 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
+import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.config.web.servlet.invoke
+import org.springframework.security.core.session.SessionRegistry
+import org.springframework.security.core.session.SessionRegistryImpl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
@@ -53,7 +56,8 @@ class VendingMachineSecurityConfig {
 
     @Bean
     fun filterChain(
-        http: HttpSecurity
+        http: HttpSecurity,
+        sessionReg: SessionRegistry
     ): SecurityFilterChain {
 
 
@@ -63,7 +67,13 @@ class VendingMachineSecurityConfig {
                 authorize(PUBLIC_PATHS, permitAll)
                 authorize(AUTHENTICATED_PATHS, authenticated)
             }
-           httpBasic {  }
+            sessionManagement {
+                this.sessionConcurrency {
+                    this.sessionRegistry = sessionReg
+                }
+                this.sessionCreationPolicy = SessionCreationPolicy.ALWAYS
+            }
+            httpBasic { }
             csrf {
                 disable()
             }
@@ -73,5 +83,10 @@ class VendingMachineSecurityConfig {
 
         }
         return http.build()
+    }
+
+    @Bean
+    fun sessionRegistry(): SessionRegistry {
+        return SessionRegistryImpl()
     }
 }

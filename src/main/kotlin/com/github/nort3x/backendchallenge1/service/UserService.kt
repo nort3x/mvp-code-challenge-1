@@ -1,21 +1,23 @@
 package com.github.nort3x.backendchallenge1.service
 
+import com.github.nort3x.backendchallenge1.dto.Coin
 import com.github.nort3x.backendchallenge1.exceptions.AlreadyExist
 import com.github.nort3x.backendchallenge1.exceptions.NotFound
-import com.github.nort3x.backendchallenge1.model.UserRegisterDto
+import com.github.nort3x.backendchallenge1.model.VendingMachineUserRegisterDto
 import com.github.nort3x.backendchallenge1.model.UserUpdateDto
 import com.github.nort3x.backendchallenge1.model.VendingMachineUser
 import com.github.nort3x.backendchallenge1.repository.VendingMachineUserRepo
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class UserService(val repo: VendingMachineUserRepo, val passwordEncoder: PasswordEncoder) {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    fun registerNewUser(user: UserRegisterDto): VendingMachineUser {
+    fun registerNewUser(user: VendingMachineUserRegisterDto): VendingMachineUser {
         repo.findById(user.username).ifPresent {
             throw AlreadyExist("username: ${user.username} already exist")
         }
@@ -24,16 +26,21 @@ class UserService(val repo: VendingMachineUserRepo, val passwordEncoder: Passwor
         )
     }
 
-    @Transactional
-    fun updateUser(username: String, userUpdateDto: UserUpdateDto): VendingMachineUser {
+    @Transactional(propagation = Propagation.REQUIRED)
+    fun updateUser(
+        username: String,
+        userUpdateDto: UserUpdateDto? = null,
+        additionalUpdate: ((VendingMachineUser) -> Unit)? = null
+    ): VendingMachineUser {
         val user = getUser(username)
 
-        userUpdateDto.password?.let {
+        userUpdateDto?.password?.let {
             user.password = passwordEncoder.encode(it)
         }
-        userUpdateDto.role?.let {
+        userUpdateDto?.role?.let {
             user.role = it
         }
+        additionalUpdate?.invoke(user)
 
         return repo.save(user)
     }
@@ -44,4 +51,14 @@ class UserService(val repo: VendingMachineUserRepo, val passwordEncoder: Passwor
     fun deleteUser(username: String) =
         repo.deleteById(username)
 
+    @Transactional
+    fun depositCoin(coin: Coin, username: String): VendingMachineUser =
+        getUser(username)
+            .apply {
+                deposit += coin.value
+            }.save()
+
+    private fun VendingMachineUser.save(): VendingMachineUser {
+        return repo.save(this)
+    }
 }

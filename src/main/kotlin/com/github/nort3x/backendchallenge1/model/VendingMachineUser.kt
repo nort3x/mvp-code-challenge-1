@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.github.nort3x.backendchallenge1.validation.MultipleOf
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.validation.annotation.Validated
 import javax.persistence.*
 import javax.validation.executable.ValidateOnExecution
 
@@ -50,6 +49,16 @@ class VendingMachineUser(
     override fun isCredentialsNonExpired(): Boolean = true
     @JsonIgnore
     override fun isEnabled(): Boolean = true
+
+
+    override fun hashCode(): Int {
+        return username.hashCode()
+    }
+
+    override fun toString(): String {
+        return "VendingMachineUser(username='$username', role=$role, deposit=$deposit)"
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -57,16 +66,15 @@ class VendingMachineUser(
         other as VendingMachineUser
 
         if (username != other.username) return false
+        if (password != other.password) return false
+        if (role != other.role) return false
+        if (deposit != other.deposit) return false
 
         return true
-    }
-
-    override fun hashCode(): Int {
-        return username.hashCode()
     }
 
 
 }
 
-data class UserRegisterDto(val username: String, val password: String, val role: VendingMachineUserRole)
+data class VendingMachineUserRegisterDto(val username: String, val password: String, val role: VendingMachineUserRole)
 data class UserUpdateDto(val password: String?, val role: VendingMachineUserRole?)

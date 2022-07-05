@@ -6,6 +6,7 @@ import com.github.nort3x.backendchallenge1.model.*
 import com.github.nort3x.backendchallenge1.repository.ProductRepo
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.util.stream.Stream
 
@@ -18,21 +19,29 @@ class ProductService(val productRepo: ProductRepo) {
             productRegisterDto.productName
         )
         if (productRepo.findById(pk).isEmpty)
-            return productRepo.save(Product(vendingMachineUser, productRegisterDto.productName))
+            return productRepo.save(
+                Product(vendingMachineUser, productRegisterDto.productName)
+                    .apply {
+                        productRegisterDto.cost?.let { this.cost = it }
+                        productRegisterDto.amountAvailable?.let { this.amountAvailable = it }
+                    }
+            )
         else throw AlreadyExist("product already exist: $pk")
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     fun updateProduct(
-        productKey: ProductSellerPK, updateDto: ProductUpdateDto, additionalUpdateHook: ((Product) -> Unit)? = null
+        productKey: ProductSellerPK,
+        updateDto: ProductUpdateDto? = null,
+        additionalUpdateHook: ((Product) -> Unit)? = null
     ): Product {
 
         val product = productRepo.findById(productKey).orElse(null) ?: throw NotFound("product not found $productKey")
 
-        updateDto.cost?.let {
+        updateDto?.cost?.let {
             product.cost = it
         }
-        updateDto.amountAvailable?.let {
+        updateDto?.amountAvailable?.let {
             product.amountAvailable = it
         }
 
