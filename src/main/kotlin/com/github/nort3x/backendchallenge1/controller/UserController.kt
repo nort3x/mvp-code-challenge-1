@@ -56,12 +56,11 @@ class UserController(
     fun getCurrentUserInfo(): ResponseEntity<VendingMachineUser> =
         userService.getUser(securityService.currentUserSafe().username).asResponseEntity()
 
-    @GetMapping("/multiple-sessions")
+    @GetMapping("/exist-multiple-sessions")
     @AuthenticatedClient
-    fun otherSessionsExist(): ResponseEntity<Boolean> = (sessionRegistry.getAllSessions(
-        SecurityContextHolder.getContext().authentication.principal,
-        false
-    ).size > 2).asResponseEntity()
+    fun otherSessionsExist(): ResponseEntity<Boolean> =
+        (sessionRegistry.getAllSessions(SecurityContextHolder.getContext().authentication.principal, false).size >= 2)
+            .asResponseEntity()
 
 
     @DeleteMapping("/{username}")
@@ -83,7 +82,7 @@ class UserController(
     @PostMapping("/reset")
     fun resetUserDeposit() = withConsiderationOf(ac.userCanResetDeposit(securityService.currentUserSafe())) {
         userService.updateUser(securityService.currentUserSafe().username) {
-                it.deposit = 0
-            }.asResponseEntity()
+            it.deposit = 0
+        }.asResponseEntity()
     }
 }

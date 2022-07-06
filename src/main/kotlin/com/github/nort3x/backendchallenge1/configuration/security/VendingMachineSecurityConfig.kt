@@ -1,5 +1,6 @@
 package com.github.nort3x.backendchallenge1.configuration.security
 
+import org.springframework.boot.web.servlet.ServletListenerRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity
@@ -13,6 +14,7 @@ import org.springframework.security.core.session.SessionRegistryImpl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.session.HttpSessionEventPublisher
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher
 import org.springframework.security.web.util.matcher.OrRequestMatcher
@@ -70,6 +72,8 @@ class VendingMachineSecurityConfig {
             sessionManagement {
                 this.sessionConcurrency {
                     this.sessionRegistry = sessionReg
+                    maximumSessions = 100
+                    maxSessionsPreventsLogin = true
                 }
                 this.sessionCreationPolicy = SessionCreationPolicy.ALWAYS
             }
@@ -88,5 +92,10 @@ class VendingMachineSecurityConfig {
     @Bean
     fun sessionRegistry(): SessionRegistry {
         return SessionRegistryImpl()
+    }
+
+    @Bean
+    fun httpSessionEventPublisher(): ServletListenerRegistrationBean<*> {    //(5)
+        return ServletListenerRegistrationBean(HttpSessionEventPublisher())
     }
 }
