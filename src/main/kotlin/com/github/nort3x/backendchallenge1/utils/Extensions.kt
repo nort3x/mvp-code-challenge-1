@@ -7,8 +7,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
 
-fun Any.logger(): Logger {
-    return LoggerFactory.getLogger(this.javaClass)
+fun Any?.logger(): Logger {
+    if (this != null) {
+        return LoggerFactory.getLogger(this.javaClass)
+    } else return LoggerFactory.getLogger("null-logger")
 }
 
 fun <T : Any> T.asResponseEntity(status: HttpStatus = HttpStatus.OK): ResponseEntity<T> =
@@ -23,4 +25,17 @@ fun <T> withConsiderationOf(condition: Vetoer, func: () -> T): T {
     return if (!condition.isDenied)
         func()
     else throw condition.reason
+}
+
+fun Any?.fireAndForget(useFallBackMessage: Boolean = false, fallbackMessage: String? = null, func: () -> Unit) {
+    try {
+        func()
+    } catch (ex: Throwable) {
+        if (useFallBackMessage)
+            fallbackMessage?.let {
+                logger().info(it)
+            }
+        else
+            logger().info("fire and forget invoking thrown exception", ex)
+    }
 }

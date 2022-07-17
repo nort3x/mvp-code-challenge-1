@@ -3,9 +3,9 @@ package com.github.nort3x.backendchallenge1.controller
 import com.github.nort3x.backendchallenge1.configuration.security.AccessDecisionCenter
 import com.github.nort3x.backendchallenge1.configuration.security.SecurityService
 import com.github.nort3x.backendchallenge1.configuration.security.permission.AuthenticatedClient
+import com.github.nort3x.backendchallenge1.exceptions.VendingMachineExceptionBase
 import com.github.nort3x.backendchallenge1.model.Product
 import com.github.nort3x.backendchallenge1.model.ProductRegisterDto
-import com.github.nort3x.backendchallenge1.model.ProductSellerPK
 import com.github.nort3x.backendchallenge1.model.ProductUpdateDto
 import com.github.nort3x.backendchallenge1.service.ProductService
 import com.github.nort3x.backendchallenge1.utils.asResponseEntity
@@ -36,14 +36,14 @@ class ProductController(
                 .asResponseEntity(HttpStatus.CREATED)
         }
 
-    @PutMapping("/{productName}")
+    @PutMapping("/{productId}")
     @AuthenticatedClient
     fun updateProduct(
-        @PathVariable productName: String,
+        @PathVariable productId: Long,
         @RequestBody @Valid productUpdateDto: ProductUpdateDto
     ): ResponseEntity<Product> =
         productService.updateProduct(
-            ProductSellerPK(securityService.currentUserSafe().username, productName),
+            productId,
             productUpdateDto,
             additionalUpdateHook = {
                 withConsiderationOf(ac.userCanModifyProductBy(user = securityService.currentUserSafe(), it))
@@ -51,21 +51,13 @@ class ProductController(
             }
         ).asResponseEntity()
 
-    @DeleteMapping("/{productName}")
+    @DeleteMapping("/{productId}")
     @AuthenticatedClient
     fun deleteProduct(
-        @PathVariable productName: String,
+        @PathVariable productId: Long,
     ): ResponseEntity<Unit> {
 
-        val product = productService.getProductById(
-            ProductSellerPK(
-                securityService.currentUserSafe().username,
-                productName
-            )
-        )
-
-        println(product)
-
+        val product = productService.getProductById(productId)
         withConsiderationOf(ac.userCanModifyProductBy(user = securityService.currentUserSafe(), product)) {
             productService.deleteProduct(product)
         }
@@ -73,13 +65,12 @@ class ProductController(
         return Unit.asResponseEntity()
     }
 
-    @GetMapping("/{sellerId}/{productName}")
+    @GetMapping("/{productId}")
     @AuthenticatedClient
     fun getProduct(
-        @PathVariable sellerId: String,
-        @PathVariable productName: String,
+        @PathVariable productId: Long,
     ): ResponseEntity<Product> {
-        val product = productService.getProductById(ProductSellerPK(sellerId, productName))
+        val product = productService.getProductById(productId)
         withConsiderationOf(ac.userCanReadProductBy(user = securityService.currentUserSafe(), product)) {}
         return product.asResponseEntity()
     }
@@ -92,14 +83,13 @@ class ProductController(
         @PathVariable sellerId: String,
     ): ResponseEntity<Collection<Product>> {
 
-        val products: Collection<Product> = productService.getProductsOfUser(sellerId)
+        val products = productService.getProductsOfUser(sellerId)
 
         return products
             .asSequence()
             .filter { !ac.userCanReadProductBy(user = securityService.currentUserSafe(), it).isDenied }
             .toList().asResponseEntity()
     }
-
 
     @GetMapping
     @AuthenticatedClient

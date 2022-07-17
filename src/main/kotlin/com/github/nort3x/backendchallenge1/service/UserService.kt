@@ -3,9 +3,10 @@ package com.github.nort3x.backendchallenge1.service
 import com.github.nort3x.backendchallenge1.dto.Coin
 import com.github.nort3x.backendchallenge1.exceptions.AlreadyExist
 import com.github.nort3x.backendchallenge1.exceptions.NotFound
-import com.github.nort3x.backendchallenge1.model.VendingMachineUserRegisterDto
+import com.github.nort3x.backendchallenge1.exceptions.VendingMachineExceptionBase
 import com.github.nort3x.backendchallenge1.model.UserUpdateDto
 import com.github.nort3x.backendchallenge1.model.VendingMachineUser
+import com.github.nort3x.backendchallenge1.model.VendingMachineUserRegisterDto
 import com.github.nort3x.backendchallenge1.repository.VendingMachineUserRepo
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -16,7 +17,8 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class UserService(val repo: VendingMachineUserRepo, val passwordEncoder: PasswordEncoder) {
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = [VendingMachineExceptionBase::class])
+    @Throws(AlreadyExist::class)
     fun registerNewUser(user: VendingMachineUserRegisterDto): VendingMachineUser {
         repo.findById(user.username).ifPresent {
             throw AlreadyExist("username: ${user.username} already exist")
@@ -26,7 +28,7 @@ class UserService(val repo: VendingMachineUserRepo, val passwordEncoder: Passwor
         )
     }
 
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = [VendingMachineExceptionBase::class])
     fun updateUser(
         username: String,
         userUpdateDto: UserUpdateDto? = null,
@@ -51,7 +53,7 @@ class UserService(val repo: VendingMachineUserRepo, val passwordEncoder: Passwor
     fun deleteUser(username: String) =
         repo.deleteById(username)
 
-    @Transactional
+    @Transactional(rollbackFor = [VendingMachineExceptionBase::class])
     fun depositCoin(coin: Coin, username: String): VendingMachineUser =
         getUser(username)
             .apply {

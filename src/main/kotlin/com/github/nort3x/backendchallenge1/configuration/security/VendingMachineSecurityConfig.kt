@@ -3,6 +3,8 @@ package com.github.nort3x.backendchallenge1.configuration.security
 import org.springframework.boot.web.servlet.ServletListenerRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -77,16 +79,20 @@ class VendingMachineSecurityConfig {
                 }
                 this.sessionCreationPolicy = SessionCreationPolicy.ALWAYS
             }
-            httpBasic { }
             csrf {
                 disable()
             }
             logout {
-                logoutUrl = "/logout"
+                disable()
             }
 
         }
         return http.build()
+    }
+
+    @Bean
+    fun authManagerBean(authenticationManagerBuilder: AuthenticationConfiguration): AuthenticationManager {
+        return authenticationManagerBuilder.authenticationManager
     }
 
     @Bean
@@ -95,7 +101,7 @@ class VendingMachineSecurityConfig {
     }
 
     @Bean
-    fun httpSessionEventPublisher(): ServletListenerRegistrationBean<*> {    //(5)
+    fun httpSessionEventPublisher(): ServletListenerRegistrationBean<*> {
         return ServletListenerRegistrationBean(HttpSessionEventPublisher())
     }
 }

@@ -155,25 +155,24 @@ class ApiTest {
 
             val product = productController.registerNewProduct(ProductRegisterDto(randomString(), 100, 100))
                 .body!!
-            val updatedProduct = productController.updateProduct(product.productName, ProductUpdateDto(105, 0))
+            val updatedProduct = productController.updateProduct(product.productId!!, ProductUpdateDto(105, 0))
                 .body!!
 
-            assertEquals(updatedProduct.pk(), product.pk())
             assertEquals(updatedProduct.cost, 105)
             assertEquals(updatedProduct.amountAvailable, 0)
 
             // invalid update attempt
             assertThrows<ConstraintViolationException> {
-                productController.updateProduct(product.productName, ProductUpdateDto(99, -1))
+                productController.updateProduct(product.productId!!, ProductUpdateDto(99, -1))
             }
 
-            val takenProduct = productController.getProduct(it.username, product.productName).body!!
+            val takenProduct = productController.getProduct(product.productId!!).body!!
 
             assertEquals(updatedProduct, takenProduct)
 
-            productController.deleteProduct(product.productName)
+            productController.deleteProduct(product.productId!!)
 
-            assertFalse(productController.productService.productRepo.existsById(product.pk()))
+            assertFalse(productController.productService.productRepo.existsById(product.productId!!))
         }
     }
 
@@ -185,18 +184,19 @@ class ApiTest {
 
     @Test
     fun `shopping edge case tests`() {
+        var product: Product? = null
         userSwitcher.asUser(seller) {
-            productController.registerNewProduct(ProductRegisterDto("product1", 5, 20))
+            product = productController.registerNewProduct(ProductRegisterDto("product1", 5, 20)).body
         }
 
 
-        fun buyOneProduct() {
-            shoppingController.buyProduct(seller.username, "product1", 1)
+        fun buyOneProduct(product: Product) {
+            shoppingController.buyProduct(product.productId!!, 1)
         }
 
         userSwitcher.asUser(buyer) {
             assertThrows<Insufficient> {
-                buyOneProduct()
+                buyOneProduct(product!!)
             }
 
             userController.depositCoin(Coin(20))
@@ -204,16 +204,16 @@ class ApiTest {
             userController.depositCoin(Coin(50))
             // total of 90
 
-            assertEquals(userController.getUserInfo(it.username).body?.deposit,90)
+            assertEquals(userController.getUserInfo(it.username).body?.deposit, 90)
 
             repeat(18) {
-                buyOneProduct()
+                buyOneProduct(product!!)
             }
 
-            assertEquals(userController.getUserInfo(it.username).body?.deposit,0)
+            assertEquals(userController.getUserInfo(it.username).body?.deposit, 0)
 
             assertThrows<Insufficient> {
-                buyOneProduct()
+                buyOneProduct(product!!)
             }
 
             userController.depositCoin(Coin(10))
@@ -221,15 +221,15 @@ class ApiTest {
 
 
             repeat(2) {
-                buyOneProduct()
+                buyOneProduct(product!!)
             }
 
             assertThrows<Insufficient> {
-                buyOneProduct() // now because product amount is 0
+                buyOneProduct(product!!) // now because product amount is 0
             }
 
             assertEquals(userController.getUserInfo(buyer.username).body?.deposit, 10)
-            assertEquals(productController.getProduct(seller.username, "product1").body?.amountAvailable, 0)
+            assertEquals(productController.getProduct(product?.productId!!).body?.amountAvailable, 0)
 
             userController.resetUserDeposit()
 

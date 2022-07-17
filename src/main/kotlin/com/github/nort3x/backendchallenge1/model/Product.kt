@@ -1,34 +1,36 @@
 package com.github.nort3x.backendchallenge1.model
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.github.nort3x.backendchallenge1.validation.MultipleOf
-import com.github.nort3x.backendchallenge1.validation.ValidCoin
 import javax.persistence.*
 import javax.validation.constraints.Min
-
-data class ProductSellerPK(
-    var seller: String? = null,
-    var productName: String? = null
-) : java.io.Serializable
-
+import javax.validation.constraints.PositiveOrZero
 
 @Entity
-@IdClass(ProductSellerPK::class)
+@Table(uniqueConstraints = [UniqueConstraint(name = "uc_name_for_seller", columnNames = ["seller_id", "product_name"])])
 class Product(
+
     @ManyToOne
-    @Id
     @JsonIgnore
-    @JoinColumn(name = "sellerId")
+    @JoinColumn(name = "seller_id")
     var seller: VendingMachineUser,
-    @Id
+
+    @Column(name = "product_name")
     var productName: String,
 
     @MultipleOf(5)
     var cost: Int = 0,
 
+    @PositiveOrZero
     var amountAvailable: Int = 0
 ) {
 
+    @Id
+    @GeneratedValue
+    var productId: Long? = null
+
+    @JsonProperty("sellerId")
     fun getSellerId(): String =
         seller.username
 
@@ -52,8 +54,6 @@ class Product(
     }
 
 
-
-    fun pk(): ProductSellerPK = ProductSellerPK(seller.username, productName)
     override fun toString(): String {
         return "Product(seller=${seller}, productName='$productName', cost=$cost, amountAvailable=$amountAvailable)"
     }

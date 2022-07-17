@@ -1,0 +1,45 @@
+version: "3.5"
+services:
+  mvp-backend-challenge-1:
+    build: .
+    container_name: mvp-backend-challenge-1
+    env_file:
+      - .env
+    restart: always
+    depends_on:
+      - mvp-postgres-database
+    ports:
+      - "5555:8080"
+    networks:
+      - mvp_proxy
+  mvp-postgres-database:
+    image: postgres:13.3
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - "/usr/mvp/pg:/var/lib/postgresql/data"
+    ports:
+      - "5556:5432"
+    restart: always
+    networks:
+      - mvp_proxy
+
+  mvp-postgres-admin:
+    image: dpage/pgadmin4:5.2
+    environment:
+      PGADMIN_DEFAULT_EMAIL: humanardaki@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    ports:
+      - "5557:80"
+    volumes:
+      - "/usr/mvp/pgadmin-dev/servers.json:/pgadmin4/servers.json"
+      - "/usr/mvp/pgadmin-dev/:/var/lib/pgadmin/"
+    restart: always
+    depends_on:
+      - mvp-postgres-database
+    networks:
+      - mvp_proxy
+
+networks:
+  mvp_proxy:
+    name: mvp_proxy

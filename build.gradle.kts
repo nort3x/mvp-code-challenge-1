@@ -38,7 +38,9 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-data-rest:1.5.12")
     implementation("org.springdoc:springdoc-openapi-security:1.5.12")
 
-    runtimeOnly("com.h2database:h2")
+    testRuntimeOnly("com.h2database:h2")
+    runtimeOnly("org.postgresql:postgresql")
+
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")

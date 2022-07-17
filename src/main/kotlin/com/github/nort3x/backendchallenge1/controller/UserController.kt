@@ -28,7 +28,6 @@ class UserController(
     val securityService: SecurityService,
     val sessionRegistry: SessionRegistry
 ) {
-
     @PostMapping
     @EveryOne
     fun registerNewUser(@RequestBody vendingMachineUserRegisterDto: VendingMachineUserRegisterDto): ResponseEntity<VendingMachineUser> =

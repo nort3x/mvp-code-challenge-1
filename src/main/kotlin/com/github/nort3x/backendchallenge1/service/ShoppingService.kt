@@ -2,7 +2,7 @@ package com.github.nort3x.backendchallenge1.service
 
 import com.github.nort3x.backendchallenge1.dto.BuyResponseDto
 import com.github.nort3x.backendchallenge1.exceptions.Insufficient
-import com.github.nort3x.backendchallenge1.model.ProductSellerPK
+import com.github.nort3x.backendchallenge1.exceptions.VendingMachineExceptionBase
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -12,10 +12,10 @@ class ShoppingService(
     val userService: UserService
 ) {
 
-    @Transactional
-    fun buyProduct(productPk: ProductSellerPK, username: String, amount: Int): BuyResponseDto {
+    @Transactional(rollbackFor = [VendingMachineExceptionBase::class])
+    fun buyProduct(productId: Long, username: String, amount: Int): BuyResponseDto {
         var totalCost = -1
-        val product = productService.updateProduct(productPk) {
+        val product = productService.updateProduct(productId) {
             if (it.amountAvailable - amount < 0)
                 throw Insufficient("product not available with given amount: $amount maximum availability is: ${it.amountAvailable}")
 
@@ -29,7 +29,7 @@ class ShoppingService(
             it.deposit -= totalCost
         }
 
-        return BuyResponseDto(totalCost,product,amount,user)
+        return BuyResponseDto(totalCost, product, amount, user)
 
     }
 }
