@@ -1,6 +1,5 @@
 package com.github.nort3x.backendchallenge1.configuration.security
 
-import org.springframework.boot.web.servlet.ServletListenerRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
@@ -9,7 +8,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
-import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.config.web.servlet.invoke
 import org.springframework.security.core.session.SessionRegistry
 import org.springframework.security.core.session.SessionRegistryImpl
@@ -20,6 +18,9 @@ import org.springframework.security.web.session.HttpSessionEventPublisher
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher
 import org.springframework.security.web.util.matcher.OrRequestMatcher
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
 
 @Configuration
@@ -61,7 +62,7 @@ class VendingMachineSecurityConfig {
     @Bean
     fun filterChain(
         http: HttpSecurity,
-        sessionReg: SessionRegistry
+        sreg: SessionRegistry
     ): SecurityFilterChain {
 
 
@@ -71,19 +72,16 @@ class VendingMachineSecurityConfig {
                 authorize(PUBLIC_PATHS, permitAll)
                 authorize(AUTHENTICATED_PATHS, authenticated)
             }
-            sessionManagement {
-                this.sessionConcurrency {
-                    this.sessionRegistry = sessionReg
-                    maximumSessions = 100
-                    maxSessionsPreventsLogin = true
-                }
-                this.sessionCreationPolicy = SessionCreationPolicy.ALWAYS
-            }
             csrf {
                 disable()
             }
             logout {
                 disable()
+            }
+            sessionManagement {
+                this.sessionConcurrency {
+                    sessionRegistry = sreg
+                }
             }
 
         }
@@ -101,7 +99,14 @@ class VendingMachineSecurityConfig {
     }
 
     @Bean
-    fun httpSessionEventPublisher(): ServletListenerRegistrationBean<*> {
-        return ServletListenerRegistrationBean(HttpSessionEventPublisher())
+    fun httpSessionEventPublisher(): HttpSessionEventPublisher{
+        return HttpSessionEventPublisher()
+    }
+}
+
+@Configuration
+class WebMvcConfig(val securityService: SecurityService): WebMvcConfigurer {
+    override fun addInterceptors(registry: InterceptorRegistry) {
+        registry.addInterceptor(securityService)
     }
 }

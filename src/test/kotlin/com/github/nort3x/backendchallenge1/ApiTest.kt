@@ -41,8 +41,8 @@ class ApiTest {
     @Autowired
     lateinit var userController: UserController
 
-    val buyer = UserDef("user1", VendingMachineUserRole.BUYER)
-    val seller = UserDef("user2", VendingMachineUserRole.SELLER)
+    val buyer = UserDef("user1", VendingMachineUserRole.BUYER, 1)
+    val seller = UserDef("user2", VendingMachineUserRole.SELLER, 2)
 
 
     // endregion
@@ -78,7 +78,7 @@ class ApiTest {
                 assertNotNull(this.body)
                 assertNotNull(this.body?.role)
                 assertNotNull(this.body?.password)
-                assertNotNull(this.body?.username)
+                assertNotNull(this.body?.userId!!)
 
                 println(this)
             }
@@ -87,13 +87,13 @@ class ApiTest {
     @Test
     fun `PUT - update user`() {
         userSwitcher.asUserWithTransaction(buyer) {
-            with(userController.updateUser(UserUpdateDto("new-password", VendingMachineUserRole.SELLER), it.username)) {
+            with(userController.updateUser(UserUpdateDto("new-password", VendingMachineUserRole.SELLER), it.userId!!)) {
 
                 assertEquals(statusCode, HttpStatus.OK)
 
                 assertNotNull(this.body?.role)
                 assertNotNull(this.body?.password)
-                assertNotNull(this.body?.username)
+                assertNotNull(this.body?.userId!!)
 
                 assertEquals(this.body?.role, VendingMachineUserRole.SELLER)
 
@@ -107,7 +107,7 @@ class ApiTest {
     fun `GET - get user`() {
         userSwitcher.asUserWithTransaction(buyer) {} // to just make user
         userSwitcher.asUserWithTransaction(buyer) {
-            val user = userController.getUserInfo(buyer.username).body
+            val user = userController.getUserInfo(buyer.userId).body
             assertEquals(user, it)
         }
 
@@ -117,12 +117,12 @@ class ApiTest {
     fun `DELETE - delete user`() {
         userSwitcher.asUserWithTransaction(buyer) {} // to just make user
         userSwitcher.asUserWithTransaction(buyer) {
-            val user = userController.getUserInfo(buyer.username).body
+            val user = userController.getUserInfo(buyer.userId).body
             assertEquals(user, it)
         }
         userSwitcher.asUserWithTransaction(buyer) {
-            val user = userController.deleteUser(it.username)
-            assertFalse(userController.userService.repo.existsById(it.username))
+            val user = userController.deleteUser(it.userId!!)
+            assertFalse(userController.userService.repo.existsById(it.userId!!))
         }
 
 
@@ -195,22 +195,26 @@ class ApiTest {
         }
 
         userSwitcher.asUser(buyer) {
+
+            // no initial deposit
             assertThrows<Insufficient> {
                 buyOneProduct(product!!)
             }
 
+            // total of 90
             userController.depositCoin(Coin(20))
             userController.depositCoin(Coin(20))
             userController.depositCoin(Coin(50))
-            // total of 90
 
-            assertEquals(userController.getUserInfo(it.username).body?.deposit, 90)
+            assertEquals(userController.getUserInfo(it.userId!!).body?.deposit, 90)
 
-            repeat(18) {
-                buyOneProduct(product!!)
-            }
+            val buyResponse = shoppingController.buyProduct(product?.productId!!, 2).body!!
+            assertEquals(buyResponse.product, productController.productService.getProductById(product?.productId!!))
+            assertEquals(buyResponse.amountBought, 2)
+            assertEquals(buyResponse.amountSpent, 2 * product?.cost!!)
+            assertEquals(buyResponse.change.sumOf { c -> c.coinValue }, 90 - 2 * product?.cost!!)
 
-            assertEquals(userController.getUserInfo(it.username).body?.deposit, 0)
+            assertEquals(userController.getUserInfo(it.userId!!).body?.deposit, 0)
 
             assertThrows<Insufficient> {
                 buyOneProduct(product!!)
@@ -218,22 +222,10 @@ class ApiTest {
 
             userController.depositCoin(Coin(10))
             userController.depositCoin(Coin(10))
-
-
-            repeat(2) {
-                buyOneProduct(product!!)
-            }
-
-            assertThrows<Insufficient> {
-                buyOneProduct(product!!) // now because product amount is 0
-            }
-
-            assertEquals(userController.getUserInfo(buyer.username).body?.deposit, 10)
-            assertEquals(productController.getProduct(product?.productId!!).body?.amountAvailable, 0)
 
             userController.resetUserDeposit()
 
-            assertEquals(userController.getUserInfo(buyer.username).body?.deposit, 0)
+            assertEquals(userController.getUserInfo(buyer.userId).body?.deposit, 0)
 
         }
 

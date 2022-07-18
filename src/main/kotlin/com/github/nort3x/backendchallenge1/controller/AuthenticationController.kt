@@ -19,10 +19,10 @@ import javax.servlet.http.HttpServletRequest
 @RestController
 class AuthenticationController(
     val sessionRegistry: SessionRegistry,
-    val authenticationManager: AuthenticationManager
+    val authenticationManager: AuthenticationManager,
 ) {
 
-    @GetMapping("/logout/all")
+    @PostMapping("/logout/all")
     @AuthenticatedClient
     fun logoutAll() {
         sessionRegistry.getAllSessions(
@@ -49,6 +49,7 @@ class AuthenticationController(
             context.authentication = authentication
             request.getSession(true)
                 .setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context)
+            sessionRegistry.registerNewSession(request.session.id, context.authentication.principal)
             return ResponseEntity.status(HttpStatus.OK).body(null)
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null)
@@ -59,5 +60,6 @@ class AuthenticationController(
     fun logOut(request: HttpServletRequest) {
         SecurityContextHolder.clearContext()
         request.getSession(false)?.invalidate()
+        sessionRegistry.removeSessionInformation(request.session.id)
     }
 }

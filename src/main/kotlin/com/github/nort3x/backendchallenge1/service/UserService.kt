@@ -8,6 +8,7 @@ import com.github.nort3x.backendchallenge1.model.UserUpdateDto
 import com.github.nort3x.backendchallenge1.model.VendingMachineUser
 import com.github.nort3x.backendchallenge1.model.VendingMachineUserRegisterDto
 import com.github.nort3x.backendchallenge1.repository.VendingMachineUserRepo
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
@@ -20,21 +21,24 @@ class UserService(val repo: VendingMachineUserRepo, val passwordEncoder: Passwor
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = [VendingMachineExceptionBase::class])
     @Throws(AlreadyExist::class)
     fun registerNewUser(user: VendingMachineUserRegisterDto): VendingMachineUser {
-        repo.findById(user.username).ifPresent {
+
+        try {
+
+            return repo.saveAndFlush(
+                VendingMachineUser(user.username, passwordEncoder.encode(user.password), user.role)
+            )
+        } catch (div: DataIntegrityViolationException) {
             throw AlreadyExist("username: ${user.username} already exist")
         }
-        return repo.save(
-            VendingMachineUser(user.username, passwordEncoder.encode(user.password), user.role)
-        )
     }
 
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = [VendingMachineExceptionBase::class])
     fun updateUser(
-        username: String,
+        userId: Long,
         userUpdateDto: UserUpdateDto? = null,
         additionalUpdate: ((VendingMachineUser) -> Unit)? = null
     ): VendingMachineUser {
-        val user = getUser(username)
+        val user = getUser(userId)
 
         userUpdateDto?.password?.let {
             user.password = passwordEncoder.encode(it)
@@ -44,23 +48,23 @@ class UserService(val repo: VendingMachineUserRepo, val passwordEncoder: Passwor
         }
         additionalUpdate?.invoke(user)
 
-        return repo.save(user)
+        return repo.saveAndEmit(user)
     }
 
-    fun getUser(username: String): VendingMachineUser =
-        repo.findById(username).orElse(null) ?: throw NotFound("user not found")
+    fun getUser(userId: Long): VendingMachineUser =
+        repo.findById(userId).orElse(null) ?: throw NotFound("user not found")
 
-    fun deleteUser(username: String) =
-        repo.deleteById(username)
+    fun deleteUser(userId: Long) =
+        repo.deleteAndEmit(userId)
 
     @Transactional(rollbackFor = [VendingMachineExceptionBase::class])
-    fun depositCoin(coin: Coin, username: String): VendingMachineUser =
-        getUser(username)
+    fun depositCoin(coin: Coin, userId: Long): VendingMachineUser =
+        getUser(userId)
             .apply {
-                deposit += coin.value
+                deposit += coin.coinValue
             }.save()
 
     private fun VendingMachineUser.save(): VendingMachineUser {
-        return repo.save(this)
+        return repo.saveAndEmit(this)
     }
 }

@@ -18,14 +18,14 @@ data class Vetoer private constructor(val isDenied: Boolean, val reason: Throwab
 class AccessDecisionCenter {
 
 
-    fun userCanModifyUserBy(targetResourceId: String, user: VendingMachineUser): Vetoer =
-        if (user.username == targetResourceId)
+    fun userCanModifyUserBy(targetResourceId: Long, user: VendingMachineUser): Vetoer =
+        if (user.userId == targetResourceId)
             Vetoer.noError
         else Vetoer.veto(UnAuthorized("you can't modify this user"))
 
 
-    fun userCanReadUserBy(targetResourceId: String, user: VendingMachineUser): Vetoer =
-        if (user.username == targetResourceId)
+    fun userCanReadUserBy(targetResourceId: Long, user: VendingMachineUser): Vetoer =
+        if (user.userId == targetResourceId)
             Vetoer.noError
         else Vetoer.veto(UnAuthorized("you can't read this user"))
 

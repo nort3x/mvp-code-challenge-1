@@ -9,5 +9,5 @@ data class BuyResponseDto(
     val amountSpent: Int,
     val product: Product,
     val amountBought: Int,
-    val currentUserState: VendingMachineUser
+    val change: List<Coin>
 )

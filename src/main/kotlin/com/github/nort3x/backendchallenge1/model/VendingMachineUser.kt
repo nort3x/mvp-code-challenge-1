@@ -11,7 +11,7 @@ import javax.validation.executable.ValidateOnExecution
 @ValidateOnExecution
 class VendingMachineUser(
 
-    @Id
+    @Column(unique = true)
     private var username: String,
 
     private var password: String,
@@ -20,7 +20,11 @@ class VendingMachineUser(
     var role: VendingMachineUserRole = VendingMachineUserRole.BUYER,
 ) : UserDetails {
 
-    fun setPassword(encodedPassword: String ){
+    @Id
+    @GeneratedValue
+    var userId: Long? = null
+
+    fun setPassword(encodedPassword: String) {
         password = encodedPassword
     }
 
@@ -43,17 +47,17 @@ class VendingMachineUser(
 
     @JsonIgnore
     override fun isAccountNonExpired(): Boolean = true
+
     @JsonIgnore
     override fun isAccountNonLocked(): Boolean = true
+
     @JsonIgnore
     override fun isCredentialsNonExpired(): Boolean = true
+
     @JsonIgnore
     override fun isEnabled(): Boolean = true
 
 
-    override fun hashCode(): Int {
-        return username.hashCode()
-    }
 
     override fun toString(): String {
         return "VendingMachineUser(username='$username', role=$role, deposit=$deposit)"
@@ -65,12 +69,17 @@ class VendingMachineUser(
 
         other as VendingMachineUser
 
-        if (username != other.username) return false
         if (password != other.password) return false
         if (role != other.role) return false
+        if (userId != other.userId) return false
         if (deposit != other.deposit) return false
+        if (username != other.username) return false
 
         return true
+    }
+
+    override fun hashCode(): Int {
+        return username.hashCode() // because it's unique
     }
 
 

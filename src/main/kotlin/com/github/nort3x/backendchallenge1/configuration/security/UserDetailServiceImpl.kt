@@ -16,7 +16,7 @@ class UserDetailServiceImpl(val userRepo: VendingMachineUserRepo) : UserDetailsS
     @Throws(UsernameNotFoundException::class)
     override fun loadUserByUsername(username: String?): UserDetails {
         return username?.let {
-            userRepo.findById(username).orElse(null)
+            userRepo.getVendingMachineUserByUsername(username)
         } ?: throw UsernameNotFoundException(username)
     }
 }

@@ -25,12 +25,10 @@ class ProductService(val productRepo: ProductRepo) {
                 productRegisterDto.amountAvailable?.let { this.amountAvailable = it }
             }
 
-            return productRepo.save(productEntity)
+            return productRepo.saveAndFlush(productEntity)
 
         } catch (ex: DataIntegrityViolationException) {
-            val actualProduct = productRepo
-                .getProductByUserAndName(vendingMachineUser.username, productRegisterDto.productName)
-            throw AlreadyExist("product with this name already exist for this user, productId: ${actualProduct?.productId}")
+            throw AlreadyExist("product with this name already exist for this user")
         }
 
     }

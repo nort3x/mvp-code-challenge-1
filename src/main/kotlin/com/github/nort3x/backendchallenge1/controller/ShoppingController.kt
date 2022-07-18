@@ -31,7 +31,7 @@ class ShoppingController(
         val product = productService.getProductById(productId)
         return withConsiderationOf(ac.userCanBuyProduct(product, securityService.currentUserSafe())) {
             shoppingService
-                .buyProduct(productId, securityService.currentUserSafe().username, amount)
+                .buyProduct(productId, securityService.currentUserSafe().userId!!, amount)
                 .asResponseEntity()
         }
     }

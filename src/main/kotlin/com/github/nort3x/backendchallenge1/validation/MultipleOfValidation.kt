@@ -17,7 +17,7 @@ import kotlin.reflect.KClass
 @MustBeDocumented
 @Constraint(validatedBy = [MultipleOfValidation::class])
 annotation class MultipleOf(val value: Int,
-                            val message: String = "value should be multiply of given value",
+                            val message: String = "value should be multiply of {value}",
                             val groups: Array<KClass<*>> = [],
                             val payload: Array<KClass<in Payload>> = []
 )

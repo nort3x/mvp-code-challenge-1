@@ -32,7 +32,16 @@ class ExceptionHandlerAdvise {
         ex: MethodArgumentNotValidException,
     ): ResponseEntity<VendingMachineManagedException> {
         return ResponseEntity.status(400)
-            .body(VendingMachineManagedException(ex.javaClass.simpleName, ex.localizedMessage))
+            .body(
+                VendingMachineManagedException(
+                    ex.javaClass.simpleName,
+                    ex.bindingResult.allErrors
+                        .asSequence()
+                        .mapNotNull { it.defaultMessage }
+                        .reduce { s1: String, s2: String ->
+                            "${s1}\n${s2}"
+                        })
+            )
     }
 
     @ExceptionHandler(Throwable::class)

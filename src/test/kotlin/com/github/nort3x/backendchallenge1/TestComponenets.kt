@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 
-data class UserDef(val username: String, val role: VendingMachineUserRole) {}
+data class UserDef(val username: String, val role: VendingMachineUserRole, val userId: Long) {}
 
 @Component
 @Profile("test")
@@ -25,7 +25,7 @@ class UserSwitcher(val userRepo: VendingMachineUserRepo, val securityService: Se
                     userDef.username,
                     "nothing",
                     userDef.role
-                )
+                ).apply { userId = userDef.userId }
             ), null, mutableListOf(SimpleGrantedAuthority(userDef.role.name))
         )
     }

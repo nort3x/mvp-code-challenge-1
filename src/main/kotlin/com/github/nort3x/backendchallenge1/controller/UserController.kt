@@ -33,27 +33,27 @@ class UserController(
     fun registerNewUser(@RequestBody vendingMachineUserRegisterDto: VendingMachineUserRegisterDto): ResponseEntity<VendingMachineUser> =
         userService.registerNewUser(vendingMachineUserRegisterDto).asResponseEntity(HttpStatus.CREATED)
 
-    @PutMapping("/{username}")
+    @PutMapping("/{userId}")
     @AuthenticatedClient
     fun updateUser(
-        @RequestBody userUpdateDto: UserUpdateDto, @PathVariable username: String
+        @RequestBody userUpdateDto: UserUpdateDto, @PathVariable userId: Long
     ): ResponseEntity<VendingMachineUser> =
-        withConsiderationOf(ac.userCanModifyUserBy(username, securityService.currentUserSafe())) {
-            userService.updateUser(username, userUpdateDto).asResponseEntity()
+        withConsiderationOf(ac.userCanModifyUserBy(userId, securityService.currentUserSafe())) {
+            userService.updateUser(userId, userUpdateDto).asResponseEntity()
         }
 
 
-    @GetMapping("/{username}")
+    @GetMapping("/{userId}")
     @AuthenticatedClient
-    fun getUserInfo(@PathVariable username: String): ResponseEntity<VendingMachineUser> =
-        withConsiderationOf(ac.userCanReadUserBy(username, securityService.currentUserSafe())) {
-            userService.getUser(username).asResponseEntity()
+    fun getUserInfo(@PathVariable userId: Long): ResponseEntity<VendingMachineUser> =
+        withConsiderationOf(ac.userCanReadUserBy(userId, securityService.currentUserSafe())) {
+            userService.getUser(userId).asResponseEntity()
         }
 
     @GetMapping()
     @AuthenticatedClient
     fun getCurrentUserInfo(): ResponseEntity<VendingMachineUser> =
-        userService.getUser(securityService.currentUserSafe().username).asResponseEntity()
+        userService.getUser(securityService.currentUserSafe().userId!!).asResponseEntity()
 
     @GetMapping("/exist-multiple-sessions")
     @AuthenticatedClient
@@ -62,11 +62,11 @@ class UserController(
             .asResponseEntity()
 
 
-    @DeleteMapping("/{username}")
+    @DeleteMapping("/{userId}")
     @AuthenticatedClient
-    fun deleteUser(@PathVariable username: String): ResponseEntity<Unit> =
-        withConsiderationOf(ac.userCanModifyUserBy(username, securityService.currentUserSafe())) {
-            userService.deleteUser(username).asResponseEntity()
+    fun deleteUser(@PathVariable userId: Long): ResponseEntity<Unit> =
+        withConsiderationOf(ac.userCanModifyUserBy(userId, securityService.currentUserSafe())) {
+            userService.deleteUser(userId).asResponseEntity()
         }
 
 
@@ -74,13 +74,13 @@ class UserController(
     @AuthenticatedClient
     fun depositCoin(@RequestBody @Valid coin: Coin): ResponseEntity<VendingMachineUser> =
         withConsiderationOf(ac.userCanDepositCoin(coin, securityService.currentUserSafe())) {
-            userService.depositCoin(coin, securityService.currentUserSafe().username).asResponseEntity()
+            userService.depositCoin(coin, securityService.currentUserSafe().userId!!).asResponseEntity()
         }
 
     @AuthenticatedClient
     @PostMapping("/reset")
     fun resetUserDeposit() = withConsiderationOf(ac.userCanResetDeposit(securityService.currentUserSafe())) {
-        userService.updateUser(securityService.currentUserSafe().username) {
+        userService.updateUser(securityService.currentUserSafe().userId!!) {
             it.deposit = 0
         }.asResponseEntity()
     }

@@ -31,9 +31,13 @@ class Product(
     var productId: Long? = null
 
     @JsonProperty("sellerId")
-    fun getSellerId(): String =
-        seller.username
+    fun getSellerId(): Long =
+        seller.userId!!
 
+
+    override fun toString(): String {
+        return "Product(seller=${seller}, productName='$productName', cost=$cost, amountAvailable=$amountAvailable)"
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -43,6 +47,9 @@ class Product(
 
         if (seller != other.seller) return false
         if (productName != other.productName) return false
+        if (cost != other.cost) return false
+        if (amountAvailable != other.amountAvailable) return false
+        if (productId != other.productId) return false
 
         return true
     }
@@ -50,12 +57,10 @@ class Product(
     override fun hashCode(): Int {
         var result = seller.hashCode()
         result = 31 * result + productName.hashCode()
+        result = 31 * result + cost
+        result = 31 * result + amountAvailable
+        result = 31 * result + (productId?.hashCode() ?: 0)
         return result
-    }
-
-
-    override fun toString(): String {
-        return "Product(seller=${seller}, productName='$productName', cost=$cost, amountAvailable=$amountAvailable)"
     }
 }
 
